@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble App</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        div {
+            height: 100vh;
+            width: 100%;
+            background-color: black;
+        }
+        nav {
+            height: 5rem;
+            background-color: rgb(21, 25, 63);
+            color: white;
+            font-size: 35px;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-style:italic ;
+            
+        }
+        canvas {
+            border: 3px solid hwb(194 5% 58%);
+            display: block;
+            margin: 20px auto;
+        }
+        button {
+            display: block;
+            height: 3rem;
+            width: 10rem;
+            max-width: 10rem;
+            border-radius: 25%;
+            margin: 10px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 500;
+            color: white;
+            border-style: none;
+
+            background-color: rgb(34, 34, 146);
+        }
+        button:hover{
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    
+    <div>
+        <nav>Bubble App</nav>
+    <canvas id="gameCanvas" width="800vw" height="400vh"></canvas>
+    <button id="resetButton">Reset</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const circles = [
+            { x: 100, y: 80, radius: 30, color: 'red', hitColor: 'pink' },
+            { x: 100, y: 160, radius: 30, color: 'blue', hitColor: 'lightblue' },
+            { x: 100, y: 240, radius: 30, color: 'green', hitColor: 'lightgreen' },
+            { x: 100, y: 320, radius: 30, color: 'orange', hitColor: 'yellow' },
+        ];
+        const arrows = [
+            { x: 700, y: 80, speed: 0, target: 0 },
+            { x: 700, y: 160, speed: 0, target: 1 },
+            { x: 700, y: 240, speed: 0, target: 2 },
+            { x: 700, y: 320, speed: 0, target: 3 },
+        ];
+        const state = {
+            hits: [false, false, false, false],
+        };
+        function drawCircles() {
+            circles.forEach((circle, index) => {
+                ctx.beginPath();
+                ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
+                ctx.fillStyle = state.hits[index] ? circle.hitColor : circle.color;
+                ctx.fill();
+                ctx.closePath();
+            });
+        }
+        function drawArrows() {
+            arrows.forEach(arrow => {
+                ctx.beginPath();
+                ctx.moveTo(arrow.x, arrow.y);
+                ctx.lineTo(arrow.x - 80, arrow.y + 8);
+                ctx.lineTo(arrow.x - 0, arrow.y + 16);
+                ctx.closePath();
+                ctx.fillStyle = 'white';
+                ctx.fill();
+            });
+        }
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        function updateArrows() {
+            arrows.forEach(arrow => {
+                if (arrow.speed > 0) {
+                    arrow.x -= arrow.speed;
+                    const circle = circles[arrow.target];
+                    if (arrow.x <= circle.x + circle.radius) {
+                        arrow.speed = 0;
+                        state.hits[arrow.target] = true;
+                    }
+                }
+            });
+        }
+        function render() {
+            clearCanvas();
+            drawCircles();
+            drawArrows();
+        }
+        function gameLoop() {
+            updateArrows();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+        function resetGame() {
+            arrows.forEach(arrow => {
+                arrow.x = 700;
+                arrow.speed = 0;
+            });
+            state.hits.fill(false);
+        }
+        canvas.addEventListener('click', event => {
+            const rect = canvas.getBoundingClientRect();
+            console.log(rect)
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+
+            circles.forEach((circle, index) => {
+                const distance = Math.sqrt((mouseX - circle.x) ** 2 + (mouseY - circle.y) ** 2);
+                if (distance <= circle.radius && !state.hits[index]) {
+                    arrows[index].speed = 5; 
+                }
+            });
+        });
+        document.getElementById('resetButton').addEventListener('click', () => {
+            resetGame();
+        });
+
+        render();
+        gameLoop();
+    </script>
+</body>
+</html>
